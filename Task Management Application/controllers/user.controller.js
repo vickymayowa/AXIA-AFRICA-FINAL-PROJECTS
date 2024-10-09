@@ -36,13 +36,7 @@ const registerUser = asyncHandler(async (req, res) => {
     // Generate and set token
     generateToken(res, user._id);
 
-    // Return user data (excluding sensitive information)
-    const userData = {
-      id: user._id,
-      name: user.fullname,
-      email: user.email,
-    };
-    res.status(201).json({ message: "Registered Successfully", userData });
+    res.status(201).json({ message: "Registered Successfully", data: user });
   } else {
     res.status(400);
     throw new Error("Invalid user data");
@@ -59,11 +53,9 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
   if (user && (await user.matchPassword(password))) {
     generateToken(res, user._id);
-    const userData = { user };
-    console.log(user);
     res
       .status(200)
-      .json({ message: "Logged In Successfully", status: true, userData });
+      .json({ message: "Logged In Successfully", status: true, data: user });
   } else {
     res.status(400);
     throw new Error("Invalid email or password");

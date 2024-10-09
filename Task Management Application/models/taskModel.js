@@ -1,5 +1,4 @@
 const mongoose = require("mongoose");
-
 const taskSchema = new mongoose.Schema({
   title: {
     type: String,
@@ -14,16 +13,14 @@ const taskSchema = new mongoose.Schema({
   deadline: {
     type: Date,
   },
-  completed: {
-    type: Boolean,
-    default: false,
+  status: {
+    type: String,
+    default: "Incomplete",
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: "User",
+    ref: "User ",
   },
 });
 
-const Task = mongoose.model("Task", taskSchema);
-
-module.exports = Task;
+module.exports = mongoose.model("Task", taskSchema);
