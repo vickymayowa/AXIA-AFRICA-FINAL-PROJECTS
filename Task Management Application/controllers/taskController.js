@@ -6,7 +6,15 @@ const User = require("../models/userModel.js");
 exports.createTask = async (req, res) => {
   try {
     const { title, description, category, deadline } = req.body;
-    const userId = req.user.id || 3;
+    let userId;
+    console.log(req.user);
+
+    if (req.user) {
+      userId = req.user._id;
+    } else {
+      userId = "66d810413e1be9ei4cbf64"; // default user ID
+    }
+
     const task = new Task({
       title,
       description,
@@ -18,8 +26,9 @@ exports.createTask = async (req, res) => {
     await task.save();
 
     res.status(201).json(task);
-  } catch (error) {
-    res.status(500).json({ error: "Failed to create task" });
+  } catch (err) {
+    console.log(err);
+    res.status(500).json({ error: "Failed to create task", status: false });
   }
 };
 
@@ -56,7 +65,7 @@ exports.updateTask = async (req, res) => {
 
     res.status(200).json(task);
   } catch (error) {
-    res.status(500).json({ error: "Failed to update task" });
+    res.status(500).json({ error: "Failed to update task", status: false });
   }
 };
 
