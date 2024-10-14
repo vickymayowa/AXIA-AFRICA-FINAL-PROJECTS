@@ -12,7 +12,7 @@ exports.createTask = async (req, res) => {
     if (req.user) {
       userId = req.user._id;
     } else {
-      userId = "66d810413e1be9ei4cbf64"; // default user ID
+      userId = "66d810413e1be9ei4cbf64";
     }
 
     const task = new Task({

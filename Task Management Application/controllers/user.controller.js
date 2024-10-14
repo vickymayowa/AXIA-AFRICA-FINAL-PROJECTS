@@ -32,18 +32,17 @@ const registerUser = asyncHandler(async (req, res) => {
 
   await user.save();
 
-  if (user) {
-    // Generate and set token
-    generateToken(res, user._id);
 
+  if (user) {
     res.status(201).json({ message: "Registered Successfully", data: user });
   } else {
     res.status(400);
     throw new Error("Invalid user data");
   }
-});
+}); 
 
 // Login User
+
 const loginUser = asyncHandler(async (req, res) => {
   const { email, password } = req.body;
   if (!email || !password) {
@@ -53,6 +52,7 @@ const loginUser = asyncHandler(async (req, res) => {
   const user = await User.findOne({ email });
   if (user && (await user.matchPassword(password))) {
     generateToken(res, user._id);
+    console.log(req.user)
     res
       .status(200)
       .json({ message: "Logged In Successfully", status: true, data: user });
