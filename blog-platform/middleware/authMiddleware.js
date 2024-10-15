@@ -1,21 +1,28 @@
-const jwt = require("jsonwebtoken");
+const jwt = require('jsonwebtoken');
+const User = require('../models/userModel');
 
-const auth = (req, res, next) => {
-  const authHeader = req.header("Authorization");
-  if (!authHeader)
-    return res.status(401).json({ message: "No token, authorization denied" });
-  const token = authHeader.split(" ")[1];
+// Protect routes
+exports.protect = async (req, res, next) => {
+  let token = req.headers.authorization?.split(' ')[1];
 
-  if (!token) return res.status(401).json({ message: "No token provided" });
-
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
-    next();
-  } catch (err) {
-    console.error("JWT Verification Error:", err.message); // Log error details
-    res.status(401).json({ message: "Token is not valid" });
+  if (token) {
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      req.user = await User.findById(decoded.id).select('-password');
+      next();
+    } catch (error) {
+      res.status(401).json({ message: 'Not authorized, token failed' });
+    }
+  } else {
+    res.status(401).json({ message: 'Not authorized, no token' });
   }
 };
 
-module.exports = auth;
+// Admin-only routes
+exports.admin = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') {
+    next();
+  } else {
+    res.status(403).json({ message: 'Admin access required' });
+  }
+};
