@@ -1,89 +1,44 @@
-const Post = require("../models/postModel");
+const Post = require('../models/postModel');
 
-// Create Post
+// Create a new post
 exports.createPost = async (req, res) => {
-  try {
-    const { title, content } = req.body;
-    const post = new Post({ title, content, author: req.user.userId });
-    await post.save();
-    res.status(201).json(post);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
+  const { title, content } = req.body;
+  const post = await Post.create({
+    title,
+    content,
+    author: req.user._id,
+  });
+  res.status(201).json(post);
 };
 
-// Get All Posts
+// Get all posts
 exports.getAllPosts = async (req, res) => {
-  try {
-    const posts = await Post.find()
-      .populate("author", "username email")
-      .populate({
-        path: "comments",
-        populate: { path: "author", select: "username email" },
-      });
+  const posts = await Post.find().populate('author', 'username');
+  res.json(posts);
+};
 
-    res.json(posts);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+// Update a post
+exports.updatePost = async (req, res) => {
+  const post = await Post.findById(req.params.id);
+
+  if (post.author.toString() === req.user._id || req.user.role === 'admin') {
+    post.title = req.body.title || post.title;
+    post.content = req.body.content || post.content;
+    const updatedPost = await post.save();
+    res.json(updatedPost);
+  } else {
+    res.status(403).json({ message: 'Not authorized' });
   }
 };
 
-// Get Single Post
-exports.getSinglePost = async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id)
-      .populate("author", "username email")
-      .populate({
-        path: "comments",
-        populate: { path: "author", select: "username email" },
-      });
+// Delete a post
+exports.deletePost = async (req, res) => {
+  const post = await Post.findById(req.params.id);
 
-    if (!post) return res.status(404).json({ message: "Post not found" });
-    res.json(post);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Like or Dislike a Post
-exports.likePost = async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: "Post not found" });
-
-    const userId = req.user.userId;
-
-    if (post.likes.includes(userId)) {
-      post.likes.pull(userId);
-    } else {
-      post.likes.push(userId);
-      post.dislikes.pull(userId); // Remove from dislikes if liked
-    }
-
-    await post.save();
-    res.json(post);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-exports.dislikePost = async (req, res) => {
-  try {
-    const post = await Post.findById(req.params.id);
-    if (!post) return res.status(404).json({ message: "Post not found" });
-
-    const userId = req.user.userId;
-
-    if (post.dislikes.includes(userId)) {
-      post.dislikes.pull(userId);
-    } else {
-      post.dislikes.push(userId);
-      post.likes.pull(userId);
-    }
-
-    await post.save();
-    res.json(post);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+  if (post.author.toString() === req.user._id || req.user.role === 'admin') {
+    await post.remove();
+    res.status(200).json({ message: 'Post removed' });
+  } else {
+    res.status(403).json({ message: 'Not authorized' });
   }
 };
